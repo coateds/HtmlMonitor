@@ -1,4 +1,11 @@
-﻿$WebMonitorLink = 'http://server2/LabServers.htm'
+﻿<#
+Version 1.0
+Jan 2016
+Dave Coate
+
+Constantly/periodically loads a web page.
+#>
+$WebMonitorLink = 'http://server2/LabServers.htm'
 
 $ie = New-Object -com internetexplorer.application
 $ie.Navigate($WebMonitorLink)

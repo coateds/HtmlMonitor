@@ -1,4 +1,15 @@
-﻿
+﻿<#
+Version 1.0
+Jan 2016
+Dave Coate
+
+This is now a 2 part solution. Part 1, this file, builds a collection of objects with ComputerName,
+Ping and other server health columns. This output is converted to html and copied to a web server.
+
+Part 2 apparently needs to be run on another server/computer. This constantly/periodically loads the
+web page from the web server copied to in part 1.
+#>
+
 <# 
 .Synopsis 
    Gets a (filtered) list of servers from a CSV File 
@@ -171,7 +182,7 @@ Function Test-ServerConnectionOnPipeline
 
 <#
 .Synopsis
-    Display Server connection information in constantly refreshing Web Page
+    Build an HTML page for a constantly refreshing Web Page
 
 .DESCRIPTION
     This is how to build a PowerShell generated, dynamically refreshing Web Page
@@ -181,20 +192,11 @@ Function Test-ServerConnectionOnPipeline
     1) Local for building the web page
     2) In folder that is accessible on a web server (wwwroot for instance)
 
-    Initialize the page on the web server
-    1) Create a header only page directly in the web server
-        Note: "<meta http-equiv=`"refresh`" content=`"10`" >"
-        Will set the web page to refresh every 10 sec
-    2) Create and Navigate a web page in an ie object 
-        Do not make it visible at this time
-
     Start the (infinite) Loop
 
-        Write a header only page to the local web page
         Build and write the local html page
             This may have multiple steps
         Copy the local file over the Web Server file
-        Make the Web server file visible
 
 .EXAMPLE
     
@@ -203,9 +205,14 @@ Function Start-HtmlMonitor
     {
     [CmdletBinding()]
 
+    Param
+        (
+        $WebServer
+        )
+
     $HtmlHeader = "<style>BODY{background-color:#737CA1;}</style>"
 
-    $WebServer = 'Server2'
+    # $WebServer = 'Server2'
     $WebServerFileName = "LabServers.htm"
     $WebServerFilePath = "\\$WebServer\C$\inetpub\wwwroot\$WebServerFileName"
     $LocalHtmlFile = "$PSScriptRoot\$WebServerFileName"
@@ -215,7 +222,8 @@ Function Start-HtmlMonitor
 
     While($True)
         {
-        $null | ConvertTo-HTML -head $HtmlHeader | Out-File $LocalHtmlFile
+        # Debug: Is this line necessary?
+        # $null | ConvertTo-HTML -head $HtmlHeader | Out-File $LocalHtmlFile
 
         $Servers = Get-MyServerCollection | Test-ServerConnectionOnPipeline | Sort-Object 'Ping','ComputerName'
         $Servers | ConvertTo-HTML -head $HtmlHeader | Out-File $LocalHtmlFile
@@ -226,8 +234,8 @@ Function Start-HtmlMonitor
 
     }
 
-
-Start-HtmlMonitor
+# Start the process
+Start-HtmlMonitor 'Server2'
 
 
 <#
