@@ -5,10 +5,5 @@ This builds on the 'BigPipelineSolution' repository/project I have presented her
 
 Currently, this process can only be run in the foreground from the ISE. Furthermore, it seems that I can only get the constant (periodic) webpage refresh to run in the same process that is constantly (periodically) writing new information to web page itself. The negative effect of this is that only one computer can be running this 'dashboard' at a time. I would like to 'de-couple' the two processes. One process to ConvertTo-HTML my collection of objects and one (that can be run by many people on multiple computers) to open and periodically refresh the web page produced.
 
-# Update 1 -
-
-The combined process of gathering information into an object collection and outputting it to HTML cannot be run on the same computer that is loading and constantly refreshing the web page. It seems that after some period of time, the two processes would collide, IE would freeze and the entore process would stop without exiting. The only recourse was to kill IE from task manager.
-
-This actually provided me with the de-coupling I was looking for, but that means 2 scripts instead of one. HtmlMonitor.ps1 has had a lot of its original Start-HtmlMonitor Function moved to "detritus" at the bottom of the script along with some functions I experimented on to try can close and release com objects. The new script, StartAndRefreshWebPage.ps1 now contains just the bits needed to open IE and refresh it every three seconds.
-
-The current experiment is to try running both scripts from PS Console instead of the ISE. It appears to be Working.
+# Feature 1 Branch
+This adds the Get-SelectedServiceStatusString Function to get the status of a particular set of services and return it all on one line. Currently the process replaces substrings within the string to build html tags that result in a color coded output: Green for Running, Red for Stopped and Yellow for other (typically starting).
