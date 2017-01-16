@@ -167,6 +167,8 @@ Function Test-ServerConnectionOnPipeline
         }
     }
 
+
+
 <#
 .Synopsis
     Display Server connection information in constantly refreshing Web Page
@@ -201,6 +203,39 @@ Function Start-HtmlMonitor
     {
     [CmdletBinding()]
 
+    $HtmlHeader = "<style>BODY{background-color:#737CA1;}</style>"
+
+    $WebServer = 'Server2'
+    $WebServerFileName = "LabServers.htm"
+    $WebServerFilePath = "\\$WebServer\C$\inetpub\wwwroot\$WebServerFileName"
+    $LocalHtmlFile = "$PSScriptRoot\$WebServerFileName"
+ 
+    # Write the initial file out to the web server
+    $null | ConvertTo-HTML -head $HtmlHeader | Out-File $WebServerFilePath
+
+    While($True)
+        {
+        $null | ConvertTo-HTML -head $HtmlHeader | Out-File $LocalHtmlFile
+
+        $Servers = Get-MyServerCollection | Test-ServerConnectionOnPipeline | Sort-Object 'Ping','ComputerName'
+        $Servers | ConvertTo-HTML -head $HtmlHeader | Out-File $LocalHtmlFile
+        (Get-Content $LocalHtmlFile).replace('False', '<font color="DarkRed"> False </font>') | Set-Content $LocalHtmlFile
+
+        Copy-Item -Path $LocalHtmlFile -Destination $WebServerFilePath
+        }
+
+    }
+
+
+Start-HtmlMonitor
+
+
+<#
+Detritus
+Function Start-HtmlMonitor
+    {
+    [CmdletBinding()]
+
  
     
     $HtmlHeader = "<style>BODY{background-color:#737CA1;}</style>`n"
@@ -216,6 +251,7 @@ Function Start-HtmlMonitor
 
     $ie = New-Object -com internetexplorer.application
     $ie.Navigate("http://$WebServer/$WebServerFileName")
+    $ie.visible = $true
 
 
     While($True)
@@ -228,11 +264,46 @@ Function Start-HtmlMonitor
 
         Copy-Item -Path $LocalHtmlFile -Destination $WebServerFilePath
         
-        $ie.visible = $true
+        # Refresh-WebPage "http://$WebServer/$WebServerFileName"
 
-        $WebMonitorLink = "http://$WebServer/$WebServerFileName"
-        $ieSet = (New-Object -ComObject Shell.Application).Windows() |  ? {$_.LocationUrl -like "$WebMonitorLink"}
-        $ieSet.Refresh()
+        # $WebMonitorLink = "http://$WebServer/$WebServerFileName"
+        # $ieSet = (New-Object -ComObject Shell.Application).Windows() |  ? {$_.LocationUrl -like "$WebMonitorLink"}
+        # $ieSet.Refresh()
+        
+        
+        # [System.Runtime.Interopservices.Marshal]::ReleaseComObject($ieSet)
+        # [System.Runtime.InteropServices.Marshal]::FinalReleaseComObject([System.__ComObject]$ieSet)
+
+        # while([System.Runtime.Interopservices.Marshal]::ReleaseComObject($ieSet) -gt 0) { "Releasing an COM instance" } 
+
+        # Release-Ref $ieSet
+        
+        # Remove-Variable ieSet
+
+        # Start-Sleep -Milliseconds 500
         }
 
     }
+
+function Release-Ref ($ref) {
+
+# [System.Runtime.InteropServices.Marshal]::ReleaseComObject([System.__ComObject]$ref) | out-null
+[System.Runtime.InteropServices.Marshal]::FinalReleaseComObject([System.__ComObject]$ref)
+[System.GC]::Collect()
+[System.GC]::WaitForPendingFinalizers()
+
+}
+
+Function Refresh-WebPage ($URL)
+    {
+        $ieSet = (New-Object -ComObject Shell.Application).Windows() |  ? {$_.LocationUrl -like "$URL"}
+        $ieSet.Refresh()
+
+        
+        # [System.Runtime.Interopservices.Marshal]::ReleaseComObject($ieSet)
+        Release-Ref $ieSet
+        
+        Remove-Variable ieSet
+
+    }
+#>
